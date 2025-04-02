@@ -3,7 +3,6 @@
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DRUPAL_BASE_URL, DRUPAL_CLIENT_ID, SITE_URL } from '@/config/drupal';
 
 function LoginContent() {
