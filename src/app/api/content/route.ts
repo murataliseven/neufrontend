@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { DRUPAL_BASE_URL } from '@/config/drupal';
-import { cookies } from 'next/headers';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const contentType = searchParams.get('type');
   
@@ -13,9 +12,8 @@ export async function GET(request: Request) {
     );
   }
 
-  const cookiesList = await cookies();
-  const authToken = cookiesList.get('auth_token');
-  const token = authToken?.value;
+  // Cookie'yi doğrudan request'ten alıyoruz
+  const token = request.cookies.get('auth_token')?.value;
 
   if (!token) {
     return NextResponse.json(
