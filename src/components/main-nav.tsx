@@ -15,16 +15,22 @@ export function MainNav({
         href="/dashboard"
         className="text-sm font-medium transition-colors hover:text-primary"
       >
-        Dashboard
+        Genel Bakış
       </Link>
       <Link
-        href="/dashboard/users"
+        href="/dashboard"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
-        Kullanıcılar
+        Müşteriler
       </Link>
       <Link
-        href="/dashboard/settings"
+        href="/dashboard"
+        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+      >
+        Ürünler
+      </Link>
+      <Link
+        href="/dashboard"
         className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
       >
         Ayarlar

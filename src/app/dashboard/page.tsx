@@ -1,5 +1,3 @@
-'use client';
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { MainNav } from '@/components/main-nav';
 import { UserNav } from '@/components/user-nav';
@@ -12,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function DashboardPage() {
   return (
-    <div className="hidden flex-col md:flex">
+    <div className="flex min-h-screen flex-col">
       <div className="border-b">
         <div className="flex h-16 items-center px-4">
           <MainNav className="mx-6" />

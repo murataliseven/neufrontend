@@ -5,7 +5,7 @@ export function Search() {
     <div>
       <Input
         type="search"
-        placeholder="Ara..."
+        placeholder="Arama..."
         className="md:w-[100px] lg:w-[300px]"
       />
     </div>
