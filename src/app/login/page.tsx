@@ -2,102 +2,60 @@
 
 import { useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DRUPAL_BASE_URL, DRUPAL_CLIENT_ID, SITE_URL } from '@/config/drupal';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const code = searchParams.get('code');
 
   useEffect(() => {
-    const code = searchParams.get('code');
-    const state = searchParams.get('state');
-    
-    console.log('Login sayfası yüklendi');
-    console.log('Code:', code);
-    console.log('State:', state);
-    
-    if (!code) {
-      console.log('Code yok, OAuth akışı başlatılıyor...');
-      const newState = Math.random().toString(36).substring(7);
-      localStorage.setItem('oauth_state', newState);
-      
-      const authUrl = new URL('/oauth/authorize', DRUPAL_BASE_URL);
-      authUrl.searchParams.append('response_type', 'code');
-      authUrl.searchParams.append('client_id', DRUPAL_CLIENT_ID);
-      authUrl.searchParams.append('redirect_uri', `${SITE_URL}/login`);
-      authUrl.searchParams.append('state', newState);
-      authUrl.searchParams.append('scope', 'consumer');
-      
-      const finalUrl = authUrl.toString();
-      console.log('Yönlendirme URL:', finalUrl);
-      
-      window.location.href = finalUrl;
-      return;
+    if (code) {
+      // Token almak için API'ye istek at
+      fetch('/api/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code,
+          redirect_uri: `${SITE_URL}/login`,
+        }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.access_token) {
+          // Token'ı cookie'ye kaydet ve dashboard'a yönlendir
+          document.cookie = `auth_token=${data.access_token}; path=/`;
+          router.push('/dashboard');
+        } else {
+          console.error('Token alınamadı:', data.error);
+        }
+      })
+      .catch(error => {
+        console.error('Token alma hatası:', error);
+      });
+    } else {
+      // Drupal OAuth login sayfasına yönlendir
+      const authUrl = `${DRUPAL_BASE_URL}/oauth/authorize?` + new URLSearchParams({
+        response_type: 'code',
+        client_id: DRUPAL_CLIENT_ID,
+        redirect_uri: `${SITE_URL}/login`,
+        scope: 'consumer'
+      });
+      window.location.href = authUrl;
     }
+  }, [code, router]);
 
-    // Authorization code ile token al
-    const getToken = async () => {
-      try {
-        console.log('Token alma işlemi başlatılıyor...');
-        
-        const response = await fetch('/api/token', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            code,
-            redirect_uri: `${SITE_URL}/login`
-          })
-        });
+  return null;
+}
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || 'Token alınamadı');
-        }
-
-        const data = await response.json();
-        console.log('Token yanıtı:', data);
-        
-        const { access_token } = data;
-        if (!access_token) {
-          throw new Error('Token yanıtında access_token bulunamadı');
-        }
-        
-        // Token'ı cookie'ye kaydet
-        document.cookie = `auth_token=${access_token}; path=/; secure; samesite=lax`;
-        localStorage.removeItem('oauth_state');
-        
-        router.push('/dashboard');
-      } catch (error) {
-        console.error('Token alınamadı:', error);
-      }
-    };
-
-    getToken();
-  }, [searchParams, router]);
-
+export default function LoginPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle>Giriş İşlemi</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-gray-600">
-            Drupal kimlik doğrulama işlemi devam ediyor...
-          </p>
-          <p className="text-center text-sm text-gray-500 mt-2">
-            Lütfen bekleyin...
-          </p>
-          <div className="mt-4 text-xs text-gray-400">
-            <p>Debug Bilgileri:</p>
-            <p>Code: {searchParams.get('code')?.substring(0, 30)}...</p>
-            <p>State: {searchParams.get('state')}</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 } 
