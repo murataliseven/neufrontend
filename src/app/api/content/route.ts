@@ -3,27 +3,27 @@ import { DRUPAL_BASE_URL } from '@/config/drupal';
 import { cookies } from 'next/headers';
 
 export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const contentType = searchParams.get('type');
+  
+  if (!contentType) {
+    return NextResponse.json(
+      { error: 'Content type is required' },
+      { status: 400 }
+    );
+  }
+
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth_token')?.value;
+
+  if (!token) {
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
   try {
-    const { searchParams } = new URL(request.url);
-    const contentType = searchParams.get('type');
-    
-    if (!contentType) {
-      return NextResponse.json(
-        { error: 'Content type is required' },
-        { status: 400 }
-      );
-    }
-
-    const cookieStore = cookies();
-    const token = cookieStore.get('auth_token')?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const response = await fetch(`${DRUPAL_BASE_URL}/jsonapi/node/${contentType}`, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -33,14 +33,12 @@ export async function GET(request: Request) {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      console.error('Drupal API Hatası:', {
+      console.error('Content fetch error:', {
         status: response.status,
-        statusText: response.statusText,
-        error
+        statusText: response.statusText
       });
       return NextResponse.json(
-        { error: `API Hatası: ${response.status} ${response.statusText}` },
+        { error: `Content fetch failed: ${response.status} ${response.statusText}` },
         { status: response.status }
       );
     }
@@ -48,9 +46,9 @@ export async function GET(request: Request) {
     const data = await response.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error('İçerik alma hatası:', error);
+    console.error('Content fetch error:', error);
     return NextResponse.json(
-      { error: 'İçerik alınamadı' },
+      { error: 'Failed to fetch content' },
       { status: 500 }
     );
   }
