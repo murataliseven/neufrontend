@@ -13,8 +13,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get('auth_token')?.value;
+  const token = cookies().get('auth_token')?.value;
 
   if (!token) {
     return NextResponse.json(
