@@ -13,7 +13,9 @@ export async function GET(request: Request) {
     );
   }
 
-  const token = cookies().get('auth_token')?.value;
+  const cookiesList = await cookies();
+  const authToken = cookiesList.get('auth_token');
+  const token = authToken?.value;
 
   if (!token) {
     return NextResponse.json(
@@ -28,7 +30,8 @@ export async function GET(request: Request) {
         'Authorization': `Bearer ${token}`,
         'Accept': 'application/vnd.api+json',
         'Content-Type': 'application/vnd.api+json',
-      }
+      },
+      cache: 'no-store'
     });
 
     if (!response.ok) {
